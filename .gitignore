@@ -1,2 +1,5 @@
 /*.project
 /a-service/.settings
+/.settings
+/auth-server/.settings/.gitignore
+/client/.settings/.gitignore
