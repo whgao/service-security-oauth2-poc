@@ -1,0 +1,9 @@
+server:
+  port: 9090
+     
+#security:
+#  oauth2:
+#    resource:
+#      filter-order: 3
+           
+logging.level.org.springframework.security.oauth2: DEBUG     
