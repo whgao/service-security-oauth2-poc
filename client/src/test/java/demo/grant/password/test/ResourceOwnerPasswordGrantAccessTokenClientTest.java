@@ -6,34 +6,44 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.resource.BaseOAuth2ProtectedResourceDetails;
 import org.springframework.security.oauth2.client.resource.OAuth2AccessDeniedException;
+import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
 import org.springframework.security.oauth2.client.token.grant.password.ResourceOwnerPasswordResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import demo.ClientApplication;
 import demo.grant.AccessTokenClientTest;
 import demo.grant.TestUtils;
 import demo.grants.AccessTokenClient;
 import demo.grants.password.ResourceOwnerPasswordGrantAccessTokenClient;
 
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(classes = ClientApplication.class)
 public class ResourceOwnerPasswordGrantAccessTokenClientTest extends AccessTokenClientTest {
+	@Autowired
+	private AuthorizationCodeResourceDetails resource;
 	
 	@Override
 	public ResourceOwnerPasswordGrantAccessTokenClient createAccessTokenClient() {
-		return new ResourceOwnerPasswordGrantAccessTokenClient();
+		return new ResourceOwnerPasswordGrantAccessTokenClient(resource);
 	}
 
 	@Override
 	public AccessTokenClient createAccessTokenClient(AuthenticationScheme authorizationScheme) {
-		return new ResourceOwnerPasswordGrantAccessTokenClient(authorizationScheme);
+		return new ResourceOwnerPasswordGrantAccessTokenClient(authorizationScheme, resource);
 	}
 	
 	@Rule

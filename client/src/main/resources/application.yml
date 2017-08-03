@@ -1,0 +1,21 @@
+
+server:
+    port: 8080
+    contextPath: /client
+    
+security:
+    basic:
+        enabled: false
+
+config:
+  oauth2:
+    a-service:    
+        clientID: my-client-with-registered-redirect
+        clientSecret: 
+        accessTokenUri: http://localhost.:9090/oauth/token
+        userAuthorizationUri: http://localhost.:9090/oauth/authorize
+        scopes: read
+        resourceUri: http://localhost.:9091
+        redirectUri: http://localhost.:8080/client/me
+                
+logging.level.org.springframework.security.oauth2: DEBUG     

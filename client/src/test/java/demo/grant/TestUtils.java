@@ -35,7 +35,7 @@ public class TestUtils {
 		}
 		
 		AServiceClient client = new AServiceClient(template);
-		Map<String, Object> result = (headers == null) ? client.getMe() : client.getMe(headers);
+		Map<String, Object> result = (headers == null) ? client.getEntries() : client.getEntries(headers);
 		Assert.assertNotNull(result);
 		Assert.assertFalse(result.isEmpty());
 

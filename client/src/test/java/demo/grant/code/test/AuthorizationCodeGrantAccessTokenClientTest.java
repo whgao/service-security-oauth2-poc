@@ -3,13 +3,15 @@ package demo.grant.code.test;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,35 +26,91 @@ import org.springframework.security.oauth2.client.token.grant.code.Authorization
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.util.OAuth2Utils;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.client.ResponseExtractor;
 
+import demo.ClientApplication;
 import demo.grant.AccessTokenClientTest;
+import demo.grant.TestUtils;
 import demo.grants.code.AuthorizationCodeGrantAccessTokenClient;
 import demo.grants.code.AuthorizationCodeGrantAccessTokenClient.UserCredential;
 
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(classes = ClientApplication.class)
 public class AuthorizationCodeGrantAccessTokenClientTest extends AccessTokenClientTest {
 	private static final Logger LOG = LoggerFactory.getLogger(AuthorizationCodeGrantAccessTokenClientTest.class);
 	
+	@Autowired
+	private AuthorizationCodeResourceDetails resource;
+	
 	@Override
 	public AuthorizationCodeGrantAccessTokenClient createAccessTokenClient() {
-		return new AuthorizationCodeGrantAccessTokenClient();
+		return new AuthorizationCodeGrantAccessTokenClient(resource);
 	}
 
 	@Override
 	public AuthorizationCodeGrantAccessTokenClient createAccessTokenClient(AuthenticationScheme authorizationScheme) {
-		return new AuthorizationCodeGrantAccessTokenClient(authorizationScheme);
+		return new AuthorizationCodeGrantAccessTokenClient(authorizationScheme, resource);
 	}
 
 	@Test
-	public void testAuthorizationCodeGrantFlow() {
+	public void testAuthorizationCodeGrantFlow() throws Exception {
 		AuthorizationCodeGrantAccessTokenClient tokenClient = createAccessTokenClient();
-		approveAccessTokenGrant(null, true, tokenClient);
+		OAuth2RestTemplate template = tokenClient.createOauth2RestTemplate();
+		
+		// Once the request is ready and approved, we can continue with the access token
+		approveAccessTokenGrant(null, true, tokenClient, template);
+		
+		AccessTokenRequest request = template.getOAuth2ClientContext().getAccessTokenRequest();
+		Assert.assertNull(request.getAuthorizationCode());
+
+		// Finally everything is in place for the grant to happen...
+		OAuth2AccessToken accessToken = template.getAccessToken();
+		Assert.assertNotNull(accessToken);
+		Assert.assertNotNull(request.getAuthorizationCode());
+
+		TestUtils.testGetMe(template);
 	}
 
+	@Test
+	public void testMultipleCallsThroughTokenExpire() throws Exception {
+		AuthorizationCodeGrantAccessTokenClient client = createAccessTokenClient();
+		OAuth2RestTemplate template = client.createOauth2RestTemplate();
+		
+		// Once the request is ready and approved, we can continue with the access token
+		approveAccessTokenGrant(null, true, client, template);
+		
+		AccessTokenRequest request = template.getOAuth2ClientContext().getAccessTokenRequest();
+		Assert.assertNull(request.getAuthorizationCode());
+
+		// Finally everything is in place for the grant to happen...
+		OAuth2AccessToken accessToken = template.getAccessToken();
+		Assert.assertNotNull(accessToken);
+		Assert.assertNotNull(request.getAuthorizationCode());
+				
+		int count = 0;
+		OAuth2AccessToken token = null;
+		boolean stop = false;
+		while (!stop && count < 10) {
+			TestUtils.testGetMe(template);
+			count ++;
+			
+			OAuth2AccessToken lastToken = template.getOAuth2ClientContext().getAccessToken();
+			if (count == 1) {
+				 token = lastToken;
+			}
+
+			stop = ! lastToken.getValue().equals(token.getValue());
+			Thread.sleep(11000); 	//11 seconds
+		}
+		
+		Assert.assertTrue(count > 5);
+		Assert.assertFalse(stop);
+	}
+	
 	private void approveAccessTokenGrant(String currentUri, boolean approved, 
-			AuthorizationCodeGrantAccessTokenClient tokenClient) {
-		OAuth2RestTemplate template = tokenClient.createOauth2RestTemplate();
+			AuthorizationCodeGrantAccessTokenClient tokenClient, OAuth2RestTemplate template) {
 		UserCredential userCeddential = tokenClient.getUserCredential();
 		AccessTokenRequest request = template.getOAuth2ClientContext().getAccessTokenRequest();
 		request.setHeaders( createAuthenticatedHeaders(template, userCeddential) );

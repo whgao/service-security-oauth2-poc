@@ -3,18 +3,19 @@ package demo.grants.code;
 import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 
+import demo.ClientApplication.Config;
 import demo.grants.AccessTokenClient;
 
 public class AuthorizationCodeGrantAccessTokenClient extends AccessTokenClient {
 	private UserCredential userCredential;
 	
-	public AuthorizationCodeGrantAccessTokenClient() {
-		super();
+	public AuthorizationCodeGrantAccessTokenClient(AuthorizationCodeResourceDetails aServiceResourceDetails) {
+		super(aServiceResourceDetails);
 		setDefaultUserCredential();
 	}
 
-	public AuthorizationCodeGrantAccessTokenClient(AuthenticationScheme authorizationScheme) {
-		super(authorizationScheme);
+	public AuthorizationCodeGrantAccessTokenClient(AuthenticationScheme authorizationScheme, AuthorizationCodeResourceDetails aServiceResourceDetails) {
+		super(authorizationScheme, aServiceResourceDetails);
 		setDefaultUserCredential();
 	}
 
@@ -23,12 +24,12 @@ public class AuthorizationCodeGrantAccessTokenClient extends AccessTokenClient {
 		AuthorizationCodeResourceDetails resource = new AuthorizationCodeResourceDetails();
 		populateDefaultResource(resource);
 		resource.setClientId("my-client-with-registered-redirect");
-		resource.setPreEstablishedRedirectUri("http://anywhere?key=value");
+		resource.setPreEstablishedRedirectUri(Config.get().getRedirectUri());
 		return resource;
 	}
 
 	public void setDefaultUserCredential() {
-		setUserCredential(new UserCredential("user", "testpass"));
+		setUserCredential(new UserCredential("user1", "testpass"));
 	}
 	
 	public UserCredential getUserCredential() {

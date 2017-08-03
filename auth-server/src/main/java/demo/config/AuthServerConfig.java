@@ -12,8 +12,13 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.KeyStoreKeyFactory;
+
+import demo.security.jwt.MyDefaultUserAuthenticationConverter;
+import demo.security.service.SecurityService;
+
 
 @Configuration
 @EnableAuthorizationServer
@@ -24,14 +29,21 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
     @Qualifier("authenticationManagerBean")
     private AuthenticationManager authenticationManager;
 	
+	@Autowired
+	private SecurityService securityService;
+	
 	@Bean
 	public JwtAccessTokenConverter accessTokenConverter() {
 		JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
+		
 		KeyStoreKeyFactory keyStoreKeyFactory = new KeyStoreKeyFactory(
 			new ClassPathResource("jwt-oauth2.jks"), "test-store-pass".toCharArray());
 		converter.setKeyPair(keyStoreKeyFactory.getKeyPair("jwt-oauth2", "test-key-pass".toCharArray()));
+		
+		DefaultAccessTokenConverter accessTokenConverter = new DefaultAccessTokenConverter();
+		accessTokenConverter.setUserTokenConverter( new MyDefaultUserAuthenticationConverter(securityService) );
+		converter.setAccessTokenConverter( accessTokenConverter);
 		return converter;
-        
 	}
 	
 	@Override
@@ -58,13 +70,18 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
 		            .authorizedGrantTypes("authorization_code")
 		            .authorities("ROLE_CLIENT")
 		            .scopes("read", "trust")
-		            .redirectUris("http://anywhere?key=value")
+		            .redirectUris("http://localhost.:8080/client/me")
+		            .accessTokenValiditySeconds(3600)
+		            .refreshTokenValiditySeconds(3600)
 		            .and()
 		        .withClient("my-client-with-secret")
 		            .authorizedGrantTypes("client_credentials", "password")
 		            .authorities("ROLE_CLIENT", "ROLE_TRUSTED_CLIENT")
 		            .scopes("read", "write")
-		            .secret("secret");
+		            .secret("secret")
+		            .accessTokenValiditySeconds(60)
+		            .refreshTokenValiditySeconds(160)
+		        ;
 		
 	}
 
@@ -75,5 +92,17 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
 			.accessTokenConverter(accessTokenConverter());
 	}
 
+
+//	@Configuration
+//	@Order(-1)
+//	public static class SecurityConfiguration extends AuthorizationServerSecurityConfiguration {
+//	
+//		@Override
+//        protected void configure(HttpSecurity http) throws Exception {
+//            super.configure(http);
+//            
+//            http.addFilterAfter(filter, BasicAuthenticationFilter.class);
+//        }
+//	}
 
 }

@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.resource.BaseOAuth2ProtectedResourceDetails;
 import org.springframework.security.oauth2.client.token.AccessTokenRequest;
 import org.springframework.security.oauth2.client.token.DefaultAccessTokenRequest;
+import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
 import org.springframework.security.oauth2.client.token.grant.redirect.AbstractRedirectResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
@@ -17,20 +18,24 @@ import org.springframework.web.client.DefaultResponseErrorHandler;
 
 
 public abstract class AccessTokenClient {
-	public static final String AUTH_SERVER_PREFIX = "http://localhost.:9090";
-	public static final String TOKEN_URL = AUTH_SERVER_PREFIX + "/oauth/token";
-	public static final String AUTH_URL = AUTH_SERVER_PREFIX + "/oauth/authorize";
+//	public static final String AUTH_SERVER_PREFIX = "http://localhost.:9090";
+//	public static final String TOKEN_URL = AUTH_SERVER_PREFIX + "/oauth/token";
+//	public static final String AUTH_URL = AUTH_SERVER_PREFIX + "/oauth/authorize";
+	
+	private AuthorizationCodeResourceDetails aServiceResourceDetails;
 	
 	protected abstract BaseOAuth2ProtectedResourceDetails createResource();
 	
 	private final BaseOAuth2ProtectedResourceDetails resource = createResource();
 
-	public AccessTokenClient() {
-		this(null);
+	public AccessTokenClient(AuthorizationCodeResourceDetails aServiceResourceDetails) {
+		this(null, aServiceResourceDetails);
 	}
 
-	public AccessTokenClient(AuthenticationScheme authorizationScheme) {
+	public AccessTokenClient(AuthenticationScheme authorizationScheme, 
+		AuthorizationCodeResourceDetails aServiceResourceDetails) {
 		setAuthenticationScheme(authorizationScheme);
+		this.aServiceResourceDetails = aServiceResourceDetails;
 	}
 
 	private void setAuthenticationScheme(AuthenticationScheme authorizationScheme) {
@@ -58,9 +63,11 @@ public abstract class AccessTokenClient {
 	}
 	
 	public OAuth2RestTemplate createOauth2RestTemplate() {
-		resource.setAccessTokenUri(TOKEN_URL);
+//		resource.setAccessTokenUri(TOKEN_URL);
+		resource.setAccessTokenUri(aServiceResourceDetails.getAccessTokenUri());
 		if (resource instanceof AbstractRedirectResourceDetails) {
-			((AbstractRedirectResourceDetails)resource).setUserAuthorizationUri(AUTH_URL);
+//			((AbstractRedirectResourceDetails)resource).setUserAuthorizationUri(AUTH_URL);
+			((AbstractRedirectResourceDetails)resource).setUserAuthorizationUri(aServiceResourceDetails.getUserAuthorizationUri());
 		}
 		OAuth2RestTemplate restTemplate = createRestTemplate(new DefaultAccessTokenRequest());
 //		ResourceOwnerPasswordAccessTokenProvider accessTokenProvider = new ResourceOwnerPasswordAccessTokenProvider();

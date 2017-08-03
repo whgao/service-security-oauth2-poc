@@ -14,13 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(produces="application/json; charset=UTF-8")
 public class SimpleService {
 	
-	private final Map<String,String> map = new HashMap<>();
+	private final Map<String,String> map = buildMap();
+	
 	
 	@RequestMapping(value = "/api/map/keys", method = RequestMethod.GET)
     public Collection<String> getKeys() {
         return map.keySet();
     }
 	
+
 	@RequestMapping(value = "/api/map/entries", method = RequestMethod.GET)
     public Map<String,String> getEntries() {
         return map;
@@ -38,8 +40,8 @@ public class SimpleService {
 		return value == null ? value : "";
     }
 
-	@RequestMapping(value = "/api/map/entry", method = RequestMethod.POST)
-    public boolean addEntry(@RequestBody() String key, String value) {
+	@RequestMapping(value = "/api/map/entry/{key}", method = RequestMethod.POST)
+    public boolean addEntry(@PathVariable("key") String key, @RequestBody() String value) {
 		key = toKey(key);
 		boolean canDo = (key != null) && ! key.isEmpty() &&
 			value != null && !value.isEmpty() && ! map.containsKey(key);
@@ -50,8 +52,8 @@ public class SimpleService {
 		return canDo;
     }
 
-	@RequestMapping(value = "/api/map/entry", method = RequestMethod.PUT)
-    public boolean updateEntry(@RequestBody() String key, String value) {
+	@RequestMapping(value = "/api/map/entry/{key}", method = RequestMethod.PUT)
+    public boolean updateEntry(@PathVariable("key") String key, @RequestBody() String value) {
 		key = toKey(key);
 		boolean canDo = (key != null) && ! key.isEmpty() &&
 			value != null && !value.isEmpty() && map.containsKey(key);
@@ -74,5 +76,12 @@ public class SimpleService {
 		return (key == null) ? "" : key.toLowerCase();
 	}
 
+
+	private Map<String, String> buildMap() {
+		Map<String, String> result = new HashMap<>();
+		result.put("seedKey1", "seedValue1");
+		result.put("seedKey2", "seedValue2");
+		return result;
+	}
 
 }
