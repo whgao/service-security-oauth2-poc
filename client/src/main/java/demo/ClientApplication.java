@@ -35,9 +35,18 @@ public class ClientApplication {
 	@Value("${config.oauth2.a-service.redirectUri}")
     private String redirectURI;
 
+	@Value("${config.oauth2.a-service.logoutUri}")
+    private String logoutURI;
+
 	public static void main(String[] args) {
         SpringApplication.run(ClientApplication.class, args);
     }
+	
+//	@Bean
+//	public ConsumerTokenServices tokenServices() {
+//	    DefaultTokenServices tokenServices = new DefaultTokenServices();
+//	    return tokenServices;
+//	}
 	
 	@Bean
     public OAuth2RestTemplate restTemplate(OAuth2ClientContext oauth2ClientContext) {
@@ -61,6 +70,7 @@ public class ClientApplication {
 		Config config = Config.get();
 		config.setResourceUri(resourceURI);
 		config.setRedirectUri(redirectURI);
+		config.setLogoutUri(logoutURI);
 		return config;
 	}
 
@@ -69,6 +79,7 @@ public class ClientApplication {
 		
 		private String resourceUri;
 		private String redirectUri;
+		private String logoutUri;
 		
 		private Config() {
 		}
@@ -91,6 +102,14 @@ public class ClientApplication {
 
 		public void setRedirectUri(String redirectUri) {
 			this.redirectUri = redirectUri;
+		}
+
+		public String getLogoutUri() {
+			return logoutUri;
+		}
+
+		public void setLogoutUri(String logoutUri) {
+			this.logoutUri = logoutUri;
 		}
 		
 		

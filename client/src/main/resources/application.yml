@@ -17,5 +17,6 @@ config:
         scopes: read
         resourceUri: http://localhost.:9091
         redirectUri: http://localhost.:8080/client/me
+        logoutUri: http://localhost.:9090/logout
                 
 logging.level.org.springframework.security.oauth2: DEBUG     
