@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.common.exceptions.InsufficientScopeException;
+import org.springframework.security.oauth2.common.exceptions.UserDeniedAuthorizationException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,7 +43,7 @@ public class ClientController {
 			} else {
 				client.updateEntry(key, value);
 			}
-		} catch (InsufficientScopeException e) {
+		} catch (InsufficientScopeException | UserDeniedAuthorizationException e) {
 			result.put("addOrUpdateEntry", e);
 		}
 

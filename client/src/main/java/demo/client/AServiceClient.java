@@ -45,8 +45,8 @@ public class AServiceClient {
 		return ClientUtils.postForEntity(template, headers, entryUri(key), value, Boolean.class).getBody();
 	}
 
-	public boolean updateEntry(String key, String value) throws Exception {
-		return ClientUtils.putForEntity(template, entryUri(key), value, Boolean.class).getBody();
+	public void updateEntry(String key, String value) throws Exception {
+		ClientUtils.putForEntity(template, entryUri(key), value);
 	}
 
 	public boolean addEntry(String key, String value) throws Exception {

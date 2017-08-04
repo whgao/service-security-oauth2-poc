@@ -38,9 +38,9 @@ public class ClientUtils {
 		return template.exchange(url, HttpMethod.PUT, request2, responseType, urlVariables);
 	}
 	
-	public static <T> ResponseEntity<T> putForEntity(RestTemplate template, 
-		String url, Object request, Class<T> responseType, Object... urlVariables) {
-		return template.postForEntity(url, request, responseType, urlVariables);
+	public static void putForEntity(RestTemplate template, 
+		String url, Object request, Object... urlVariables) {
+		template.put(url, request, urlVariables);
 	}
 	
 	public static <T> ResponseEntity<T> deleteForEntity(RestTemplate template, 

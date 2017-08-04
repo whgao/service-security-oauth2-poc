@@ -28,29 +28,11 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
 	@Bean
     protected JwtAccessTokenConverter tokenEnhancer() throws IOException {
         JwtAccessTokenConverter converter =  new JwtAccessTokenConverter();
-//        Resource resource = new ClassPathResource("jwt-oauth-rsa.pub");
-//        String publicKey = null;
-//        try {
-//            publicKey = new String(FileCopyUtils.copyToByteArray(resource.getInputStream()));
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//        converter.setVerifierKey(publicKey)
         converter.setVerifierKey(new String(FileCopyUtils.copyToByteArray(
         	new ClassPathResource("jwt-oauth-rsa.pub").getInputStream())));
         return converter;
     }
 	
-//	@Bean
-//	public DefaultTokenServices tokenServices(ClientDetailsService clientDetailsService) {
-//		DefaultTokenServices services = new DefaultTokenServices();
-//		services.setTokenStore(tokenStore());
-//		services.setTokenEnhancer(tokenEnhancer());
-//		services.setSupportRefreshToken(true);
-//		services.setClientDetailsService(clientDetailsService);
-//		return services;
-//	}
-
 	@Override
 	public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
         resources
@@ -76,13 +58,13 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
 		        .antMatchers(HttpMethod.PATCH, "/api/**")
 		        	.access("#oauth2.hasScope('write')")
 		        .antMatchers(HttpMethod.POST, "/api/**")
-		        	.access("#oauth2.hasScope('write')")
+		        	.access("hasAuthority('RIGHT_ADMIN')")
 		        .antMatchers(HttpMethod.PUT, "/api/**")
-		        	.access("#oauth2.hasScope('write')")
+		        	.access("hasAnyAuthority('RIGHT_DEV', 'RIGHT_ADMIN')")
 		        .antMatchers(HttpMethod.DELETE, "/api/**")
-		        	.access("#oauth2.hasScope('write')")
+		        	.access("hasAuthority('RIGHT_ADMIN')")
 		        .antMatchers("/admin/**")
-		        	.access("hasRole('ROLE_ADMIN')");
+		        	.access("hasAuthority('ROLE_ADMIN')");
 	}
 
 	
