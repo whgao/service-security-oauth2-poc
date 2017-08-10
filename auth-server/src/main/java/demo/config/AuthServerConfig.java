@@ -52,6 +52,7 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
 //			.tokenKeyAccess("isAnonymous() || hasAuthority('ROLE_TRUSTED_CLIENT')")
 //			.checkTokenAccess("hasAuthority('ROLE_TRUSTED_CLIENT')")
 //			.realm("sparklr2/client")
+//			.sslOnly()
 		;
 	}
 
@@ -70,7 +71,7 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
 		            .authorizedGrantTypes("authorization_code")
 		            .authorities("ROLE_CLIENT")
 		            .scopes("read", "trust")
-		            .redirectUris("http://localhost.:8080/client/me")
+		            .redirectUris("http://localhost:8080/client/me", "http://localhost.:8080/client/me")
 		            .accessTokenValiditySeconds(3600)
 		            .refreshTokenValiditySeconds(3600)
 		            .and()
