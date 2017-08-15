@@ -15,13 +15,12 @@ import org.springframework.security.oauth2.client.token.grant.redirect.AbstractR
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.RestTemplate;
+
+import demo.ClientApplication.OauthSslClientContext;
 
 
 public abstract class AccessTokenClient {
-//	public static final String AUTH_SERVER_PREFIX = "http://localhost.:9090";
-//	public static final String TOKEN_URL = AUTH_SERVER_PREFIX + "/oauth/token";
-//	public static final String AUTH_URL = AUTH_SERVER_PREFIX + "/oauth/authorize";
-	
 	private AuthorizationCodeResourceDetails aServiceResourceDetails;
 	
 	protected abstract BaseOAuth2ProtectedResourceDetails createResource();
@@ -55,14 +54,14 @@ public abstract class AccessTokenClient {
 		return resource;
 	}
 
-	public OAuth2AccessToken getAccessToken() {
-		OAuth2RestTemplate restTemplate = createOauth2RestTemplate();
+	public OAuth2AccessToken getAccessToken(OauthSslClientContext context) {
+		OAuth2RestTemplate restTemplate = createOauth2RestTemplate(context);
 		OAuth2AccessToken token = restTemplate.getAccessToken();
 		return token;
 		
 	}
 	
-	public OAuth2RestTemplate createOauth2RestTemplate() {
+	public OAuth2RestTemplate createOauth2RestTemplate(OauthSslClientContext context) {
 //		resource.setAccessTokenUri(TOKEN_URL);
 		resource.setAccessTokenUri(aServiceResourceDetails.getAccessTokenUri());
 		if (resource instanceof AbstractRedirectResourceDetails) {
@@ -72,6 +71,15 @@ public abstract class AccessTokenClient {
 		OAuth2RestTemplate restTemplate = createRestTemplate(new DefaultAccessTokenRequest());
 //		ResourceOwnerPasswordAccessTokenProvider accessTokenProvider = new ResourceOwnerPasswordAccessTokenProvider();
 //		restTemplate.setAccessTokenProvider(accessTokenProvider);
+		
+		restTemplate.setAccessTokenProvider(context.getAccessTokenProvider());
+		restTemplate.setRequestFactory(context.getClientHttpRequestFactory());
+		return restTemplate;
+	}
+	
+	public static RestTemplate createRestTemplate(OauthSslClientContext context) {
+		RestTemplate restTemplate = new RestTemplate();
+		restTemplate.setRequestFactory(context.getClientHttpRequestFactory());
 		return restTemplate;
 	}
 	

@@ -1,10 +1,13 @@
 package demo.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
@@ -24,6 +27,8 @@ import demo.security.service.SecurityService;
 @EnableAuthorizationServer
 @EnableWebSecurity
 public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
+	private static final Logger LOG = LoggerFactory.getLogger(AuthServerConfig.class);
+	
 	
 	@Autowired
     @Qualifier("authenticationManagerBean")
@@ -32,17 +37,42 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
 	@Autowired
 	private SecurityService securityService;
 	
+	@Value("${security.oauth2.resource.jwt.key-store}")
+    private Resource jwtSignerKeyStore;
+    
+	@Value("${security.oauth2.resource.jwt.key-alias}")
+    private String jwtSignerKeyAlias;
+	
+	@Value("${security.oauth2.resource.jwt.key-store-password}")
+    private String jwtSignerStorePass;
+	
+	@Value("${security.oauth2.resource.jwt.key-password}")
+    private String jwtSignerKeyPass;
+	
+	@Value("${server.ssl.key-store}")
+    private Resource serverSslKeyStore;
+	
+	@Value("${server.ssl.key-alias}")
+    private String serverSslKeyAlias;
+	
+	
 	@Bean
 	public JwtAccessTokenConverter accessTokenConverter() {
 		JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
 		
-		KeyStoreKeyFactory keyStoreKeyFactory = new KeyStoreKeyFactory(
-			new ClassPathResource("jwt-oauth2.jks"), "test-store-pass".toCharArray());
-		converter.setKeyPair(keyStoreKeyFactory.getKeyPair("jwt-oauth2", "test-key-pass".toCharArray()));
+		KeyStoreKeyFactory keyStoreKeyFactory = new KeyStoreKeyFactory( jwtSignerKeyStore, jwtSignerStorePass.toCharArray());
+		converter.setKeyPair(keyStoreKeyFactory.getKeyPair(jwtSignerKeyAlias, jwtSignerKeyPass.toCharArray()));
 		
 		DefaultAccessTokenConverter accessTokenConverter = new DefaultAccessTokenConverter();
 		accessTokenConverter.setUserTokenConverter( new MyDefaultUserAuthenticationConverter(securityService) );
 		converter.setAccessTokenConverter( accessTokenConverter);
+		
+		LOG.info( 
+			String.format("%s, %s, %s, %s", "security.oauth2.resource.jwt.key-store={}", 
+			"security.oauth2.resource.jwt.key-alias={}",  "server.ssl.key-store={}", 
+			"server.ssl.key-alias={}"), jwtSignerKeyStore, jwtSignerKeyAlias, 
+			serverSslKeyStore, serverSslKeyAlias );
+		
 		return converter;
 	}
 	
@@ -53,7 +83,7 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
 //			.checkTokenAccess("hasAuthority('ROLE_TRUSTED_CLIENT')")
 //			.realm("sparklr2/client")
 //			.sslOnly()
-		;
+//		;
 	}
 
 	@Override
@@ -71,7 +101,8 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
 		            .authorizedGrantTypes("authorization_code")
 		            .authorities("ROLE_CLIENT")
 		            .scopes("read", "trust")
-		            .redirectUris("http://localhost:8080/client/me", "http://localhost.:8080/client/me")
+//		            .redirectUris("https://localhost:8080/client/me", "https://localhost.:8080/client/me")
+		            .redirectUris("https://localhost:8080/client/me")
 		            .accessTokenValiditySeconds(3600)
 		            .refreshTokenValiditySeconds(3600)
 		            .and()
@@ -92,18 +123,5 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
 			.authenticationManager(authenticationManager)
 			.accessTokenConverter(accessTokenConverter());
 	}
-
-
-//	@Configuration
-//	@Order(-1)
-//	public static class SecurityConfiguration extends AuthorizationServerSecurityConfiguration {
-//	
-//		@Override
-//        protected void configure(HttpSecurity http) throws Exception {
-//            super.configure(http);
-//            
-//            http.addFilterAfter(filter, BasicAuthenticationFilter.class);
-//        }
-//	}
 
 }

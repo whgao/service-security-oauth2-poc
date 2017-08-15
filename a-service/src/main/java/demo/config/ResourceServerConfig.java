@@ -2,9 +2,12 @@ package demo.config;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,6 +22,18 @@ import org.springframework.util.FileCopyUtils;
 @Configuration
 @EnableResourceServer
 public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
+	private static final Logger LOG = LoggerFactory.getLogger(ResourceServerConfig.class);
+	
+	
+	@Value("${security.oauth2.resource2.jwt.key-file}")
+    private Resource jwtVerifierKeyFile;
+    
+	@Value("${server.ssl.key-store}")
+    private Resource serverSslKeyStore;
+	
+	@Value("${server.ssl.key-alias}")
+    private String serverSslKeyAlias;
+	
 	
 	@Bean
     public TokenStore tokenStore() throws IOException {
@@ -29,7 +44,10 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
     protected JwtAccessTokenConverter tokenEnhancer() throws IOException {
         JwtAccessTokenConverter converter =  new JwtAccessTokenConverter();
         converter.setVerifierKey(new String(FileCopyUtils.copyToByteArray(
-        	new ClassPathResource("jwt-oauth-rsa.pub").getInputStream())));
+        	jwtVerifierKeyFile.getInputStream())));
+
+        LOG.info("security.oauth2.resource2.jwt.key-file={}, server.ssl.key-store={}, server.ssl.key-alias={}",
+        	jwtVerifierKeyFile, serverSslKeyStore, serverSslKeyAlias);
         return converter;
     }
 	

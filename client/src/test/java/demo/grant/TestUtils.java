@@ -31,7 +31,7 @@ public class TestUtils {
 	private static void testGetMeInternal(RestTemplate template, AuthenticationScheme scheme, HttpHeaders headers, AccessTokenClientTest test) throws Exception {
 		if (template == null) {
 			AccessTokenClient tokenClient = test.createAccessTokenClient(scheme);
-			template = tokenClient.createOauth2RestTemplate();
+			template = tokenClient.createOauth2RestTemplate(test.getOauthSslClientContext());
 		}
 		
 		AServiceClient client = new AServiceClient(template);

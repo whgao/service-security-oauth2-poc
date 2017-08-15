@@ -2,7 +2,15 @@
 server:
     port: 8080
     contextPath: /client
-    
+    ssl:
+      enabled: true
+      key-store: classpath:client.jks
+      key-alias: client-ssl
+      key-store-password: test-store-pass
+      key-password: test-key-pass
+      trust-store: classpath:client-trust-store.jks
+      trust-store-password: test-store-pass
+      
 security:
     basic:
         enabled: false
@@ -12,11 +20,11 @@ config:
     a-service:    
         clientID: my-client-with-registered-redirect
         clientSecret: 
-        accessTokenUri: http://localhost.:9090/oauth/token
-        userAuthorizationUri: http://localhost.:9090/oauth/authorize
+        accessTokenUri: https://localhost:9090/oauth/token
+        userAuthorizationUri: https://localhost:9090/oauth/authorize
         scopes: read
-        resourceUri: http://localhost.:9091
-        redirectUri: http://localhost.:8080/client/me
-        logoutUri: http://localhost.:9090/logout
+        resourceUri: https://localhost:9091
+        redirectUri: https://localhost:8080/client/me
+        logoutUri: https://localhost:9090/logout
                 
 logging.level.org.springframework.security.oauth2: DEBUG     

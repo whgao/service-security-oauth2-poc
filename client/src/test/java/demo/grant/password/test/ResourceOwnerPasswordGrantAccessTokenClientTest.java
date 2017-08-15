@@ -53,7 +53,7 @@ public class ResourceOwnerPasswordGrantAccessTokenClientTest extends AccessToken
 	@Test
 	public void testGetAccessToken() {
 		AccessTokenClient tokenClient = createAccessTokenClient();
-		OAuth2AccessToken token = tokenClient.getAccessToken();
+		OAuth2AccessToken token = tokenClient.getAccessToken(getOauthSslClientContext());
 		
 		Assert.assertNotNull(token);
 		Assert.assertNotNull(token.getValue());
@@ -74,22 +74,23 @@ public class ResourceOwnerPasswordGrantAccessTokenClientTest extends AccessToken
 	
 	@Test
 	public void testGetAccessTokenWithNoClientSecret() {
-		expectAccessTokenError(thrown);
+		expectAccessTokenError3(thrown);
 		
 		AccessTokenClient tokenClient = createAccessTokenClient();
 		BaseOAuth2ProtectedResourceDetails detail = tokenClient.getResource();
 		detail.setClientId("my-client-with-secret");
-		tokenClient.getAccessToken();
+		tokenClient.getAccessToken(getOauthSslClientContext());
 	}
 	
 	@Test
 	public void testGetAccessTokenWithWrongClient() {
-		expectAccessTokenError(thrown);
+		expectAccessTokenError3(thrown);
 		
 		AccessTokenClient tokenClient = createAccessTokenClient();
 		BaseOAuth2ProtectedResourceDetails detail = tokenClient.getResource();
 		detail.setClientId(detail.getClientId() + "wrong");
-		tokenClient.getAccessToken();
+		OAuth2AccessToken token = tokenClient.getAccessToken(getOauthSslClientContext());
+		Assert.assertNotNull(token);
 	}
 	
 	
@@ -111,7 +112,7 @@ public class ResourceOwnerPasswordGrantAccessTokenClientTest extends AccessToken
 	@Test
 	public void testMultipleCallsThroughTokenExpire() throws Exception {
 		AccessTokenClient client = createAccessTokenClient();
-		OAuth2RestTemplate template = client.createOauth2RestTemplate();
+		OAuth2RestTemplate template = client.createOauth2RestTemplate(getOauthSslClientContext());
 		int count = 0;
 		OAuth2AccessToken token = null;
 		boolean stop = false;
@@ -135,7 +136,7 @@ public class ResourceOwnerPasswordGrantAccessTokenClientTest extends AccessToken
 	@Test
 	public void testUnauthenticatedWithoutAccessToken1() throws Exception {
 		expectRequireFullAuthenticationError(thrown);		
-		TestUtils.testGetMe(new RestTemplate());
+		TestUtils.testGetMe(AccessTokenClient.createRestTemplate(getOauthSslClientContext()));
 	}
 	
 	@Test
@@ -147,21 +148,13 @@ public class ResourceOwnerPasswordGrantAccessTokenClientTest extends AccessToken
 	@Test
 	public void testWrongSecretError() throws Exception {
 		expectInvalidTokenError(thrown);		
-		RestTemplate template = new RestTemplate();
+		RestTemplate template = AccessTokenClient.createRestTemplate(getOauthSslClientContext());
 		
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Authorization", "Bearer FOO");
 		TestUtils.testGetMe(template, headers);
 	}
 	
-	private void expectAccessTokenError(ExpectedException thrown) {
-		thrown.expect(OAuth2AccessDeniedException.class);
-		thrown.expectMessage("Error requesting access token.");
-		thrown.expectCause(Matchers.allOf(Matchers.instanceOf(HttpClientErrorException.class), 
-			Matchers.hasProperty("statusCode", Matchers.is(HttpStatus.UNAUTHORIZED)),
-			Matchers.hasProperty("statusText", Matchers.is("Unauthorized"))));
-	}
-
 	private void expectRequireFullAuthenticationError(ExpectedException thrown) {
 		expectHttpClientErrorException(thrown, "unauthorized", 
 			"Full authentication is required to access this resource");
@@ -195,7 +188,13 @@ public class ResourceOwnerPasswordGrantAccessTokenClientTest extends AccessToken
 			Matchers.hasProperty("message", Matchers.is("Bad credentials"))));
 	}
 
-	
+	protected void expectAccessTokenError3(ExpectedException thrown) {
+		thrown.expect(OAuth2AccessDeniedException.class);
+		thrown.expectMessage("Access token denied.");
+		thrown.expectCause(Matchers.allOf(Matchers.instanceOf(OAuth2Exception.class), 
+			Matchers.hasProperty("message", Matchers.is("Unauthorized"))));
+	}
+
 
 	@Test
 	public void testGetAccessTokenWithWrongUser() {
@@ -204,7 +203,7 @@ public class ResourceOwnerPasswordGrantAccessTokenClientTest extends AccessToken
 		ResourceOwnerPasswordGrantAccessTokenClient tokenClient = createAccessTokenClient();
 		ResourceOwnerPasswordResourceDetails detail = tokenClient.getResource();
 		detail.setUsername(detail.getUsername() + "wrong");
-		tokenClient.getAccessToken();
+		tokenClient.getAccessToken(getOauthSslClientContext());
 	}
 	
 	@Test
@@ -214,7 +213,7 @@ public class ResourceOwnerPasswordGrantAccessTokenClientTest extends AccessToken
 		ResourceOwnerPasswordGrantAccessTokenClient tokenClient = createAccessTokenClient();
 		ResourceOwnerPasswordResourceDetails detail = tokenClient.getResource();
 		detail.setPassword(detail.getPassword() + "wrong");
-		tokenClient.getAccessToken();
+		tokenClient.getAccessToken(getOauthSslClientContext());
 	}
 
 

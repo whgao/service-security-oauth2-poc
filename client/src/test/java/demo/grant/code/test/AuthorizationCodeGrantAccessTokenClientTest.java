@@ -44,6 +44,7 @@ public class AuthorizationCodeGrantAccessTokenClientTest extends AccessTokenClie
 	@Autowired
 	private AuthorizationCodeResourceDetails resource;
 	
+	
 	@Override
 	public AuthorizationCodeGrantAccessTokenClient createAccessTokenClient() {
 		return new AuthorizationCodeGrantAccessTokenClient(resource);
@@ -57,7 +58,7 @@ public class AuthorizationCodeGrantAccessTokenClientTest extends AccessTokenClie
 	@Test
 	public void testAuthorizationCodeGrantFlow() throws Exception {
 		AuthorizationCodeGrantAccessTokenClient tokenClient = createAccessTokenClient();
-		OAuth2RestTemplate template = tokenClient.createOauth2RestTemplate();
+		OAuth2RestTemplate template = tokenClient.createOauth2RestTemplate(getOauthSslClientContext());
 		
 		// Once the request is ready and approved, we can continue with the access token
 		approveAccessTokenGrant(null, true, tokenClient, template);
@@ -76,7 +77,7 @@ public class AuthorizationCodeGrantAccessTokenClientTest extends AccessTokenClie
 	@Test
 	public void testMultipleCallsThroughTokenExpire() throws Exception {
 		AuthorizationCodeGrantAccessTokenClient client = createAccessTokenClient();
-		OAuth2RestTemplate template = client.createOauth2RestTemplate();
+		OAuth2RestTemplate template = client.createOauth2RestTemplate(getOauthSslClientContext());
 		
 		// Once the request is ready and approved, we can continue with the access token
 		approveAccessTokenGrant(null, true, client, template);
@@ -182,6 +183,8 @@ public class AuthorizationCodeGrantAccessTokenClientTest extends AccessTokenClie
 				};
 			}
 		};
+		provider.setRequestFactory( template.getRequestFactory() );
+		
 		try {
 			provider.obtainAuthorizationCode(template.getResource(), template.getOAuth2ClientContext()
 					.getAccessTokenRequest());

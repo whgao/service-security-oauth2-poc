@@ -1,9 +1,21 @@
 server:
   port: 9090
+  ssl:
+    enabled: true
+    key-store: classpath:auth-server.jks
+    key-alias: auth-server-ssl
+    key-store-password: test-store-pass
+    key-password: test-key-pass
      
-#security:
-#  oauth2:
-#    resource:
-#      filter-order: 3
-           
+security:
+#  require-ssl: true
+  oauth2:
+    resource:
+      jwt:
+        key-store: classpath:jwt-oauth2.jks
+        key-alias: jwt-oauth2
+        key-store-password: test-store-pass
+        key-password: test-key-pass         
+                   
+                   
 logging.level.org.springframework.security.oauth2: DEBUG     
